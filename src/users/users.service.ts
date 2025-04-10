@@ -1,4 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -57,47 +60,39 @@ export class UsersService {
 
     findAll(role?: 'ADMIN' | 'INTERN' | 'ENGINEER' | 'MANAGER') {
         if (role) {
-            return this.usersData.filter(user => user.role === role);
+            const  users = this.usersData.find(user => user.role === role);
+            if (!users) {
+                throw new NotFoundException(`User with role ${role} not found`);
+            }
+            return users;
         }
         return this.usersData;
     }
 
 
     findOne(id: number) {
-        return this.usersData.find(user => user.id === id);
+        const user =  this.usersData.find(user => user.id === id);
+        if (!user) {
+            throw new NotFoundException(`User with ID ${id} not found`);
+        }
+        return user;
     }
 
     // Method to create a new user
-    createUser(user: {
-        name: string;
-        email: string;
-        age: number;
-        address: string;
-        phone: string;
-        role: 'ADMIN' | 'INTERN' | 'ENGINEER' | 'MANAGER';
-        isActive: boolean;
-    }) {
+    createUser(createUserDto: CreateUserDto) {
         const newUser = {
             id: this.usersData.length + 1,
-            ...user
+            ...createUserDto
         };
         this.usersData.push(newUser);
         return newUser;
     }
 
     // Method to update an existing user
-    updateUser(id: number, user: {
-        name?: string;
-        email?: string;
-        age?: number;
-        address?: string;
-        phone?: string;
-        role?: 'ADMIN' | 'INTERN' | 'ENGINEER' | 'MANAGER';
-        isActive?: boolean;
-    }) {
+    updateUser(id: number, updateUserDto: UpdateUserDto) {
         const existingUser = this.findOne(id);
         if (existingUser) {
-            Object.assign(existingUser, user);
+            Object.assign(existingUser, updateUserDto);
             return existingUser;
         }
         return null;
